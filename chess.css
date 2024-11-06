@@ -1,0 +1,37 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+}
+
+.sectionBoard {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    grid-template-rows: repeat(8, 1fr);
+    border: 2px solid rgb(163,82,78);
+}
+
+.block {
+    width: 80px;
+    height: 80px;
+    padding: 2px;
+    border: 0;
+}
+
+.lightBackgound {
+    background-color: rgb(242,232,231);
+}
+
+.darkBackground {
+    background-color: rgb(163,82,78);
+}
+
+.piece {
+    height: 80%;
+}
