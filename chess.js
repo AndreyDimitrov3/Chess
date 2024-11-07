@@ -241,7 +241,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const parentElement = takenPiece.closest(".block");
         const takenPieceImg = takenPiece.firstChild;
 
-        parentElement.removeChild(takenPieceImg)
+        parentElement.removeChild(takenPieceImg);
     }
 
     function checkExposeKing() {
