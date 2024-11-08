@@ -160,7 +160,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function pawnMoveChecker(selectedPiece, movedSquare, player) {
         let playerPawn = player === "white" ? 1 : -1;
-        const diagonalCheck = player === "white" ? 1 : -1;
         const previousSquare = selectedPiece.closest(".block");
         const previousSquareRow = parseInt(previousSquare.dataset.row);
         const previousSquareColumn = parseInt(previousSquare.dataset.column);
@@ -174,36 +173,58 @@ document.addEventListener("DOMContentLoaded", function() {
             if (selectedPiece.dataset.color === "white" && 
                 movedSquareRow <= previousSquareRow + playerPawn && 
                 previousSquareColumn === movedSquareColumn) {
-                return columnChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
+                    return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
             } else if(selectedPiece.dataset.color === "black" && 
                 movedSquareRow >= previousSquareRow + playerPawn && 
                 previousSquareColumn === movedSquareColumn) {
-                    return columnChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
+                    return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
                 }
         } else {
             if (selectedPiece.dataset.color === player && 
                 movedSquareRow === previousSquareRow + playerPawn && 
                 previousSquareColumn === movedSquareColumn) {
-                    return columnChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
+                    return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
             }
         }
 
         if (selectedPiece.dataset.color === player) {
-            if (movedSquare === checkLeftDiagonal && checkLeftDiagonal && checkLeftDiagonal.children.length > 0 && checkLeftDiagonal.querySelector("img").dataset.color !== player) {
-                capturePiece(checkLeftDiagonal);
-                return true;
+            if (movedSquare === checkLeftDiagonal && checkLeftDiagonal && 
+                checkLeftDiagonal.children.length > 0 && checkLeftDiagonal.querySelector("img").dataset.color !== player) {
+                    capturePiece(checkLeftDiagonal);
+                    return true;
             }
         
-            if (movedSquare === checkRightDiagonal && checkRightDiagonal && checkRightDiagonal.children.length > 0 && checkRightDiagonal.dataset.color !== player) {
-                capturePiece(checkRightDiagonal);
-                return true;
+            if (movedSquare === checkRightDiagonal && checkRightDiagonal && 
+                checkRightDiagonal.children.length > 0 && checkRightDiagonal.dataset.color !== player) {
+                    capturePiece(checkRightDiagonal);
+                    return true;
             }
         }
+
         return false;
     }
 
     function rookMoveChecker(selectedPiece, movedSquare, player) {
-        return true;
+        const previousSquare = selectedPiece.closest(".block");
+        const previousSquareRow = parseInt(previousSquare.dataset.row);
+        const previousSquareColumn = parseInt(previousSquare.dataset.column);
+        const movedSquareRow = parseInt(movedSquare.dataset.row);
+        const movedSquareColumn = parseInt(movedSquare.dataset.column);
+
+        if(selectedPiece.dataset.color === player) {
+            if((previousSquareColumn === movedSquareColumn) || (previousSquareRow === movedSquareRow)) {
+                let direction;
+                if(previousSquareColumn === movedSquareColumn) {
+                    direction = previousSquareRow < movedSquareRow ? 1 : -1;
+                    return rowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, direction, player);
+                } else {
+                    direction = previousSquareColumn < movedSquareColumn ? 1 : -1;
+                    return columnChecker(previousSquareColumn, movedSquareColumn, previousSquareRow, direction, player);
+                }
+            }
+        }
+
+        return false;
     }
 
     function knightMoveChecker(selectedPiece, movedSquare, player) {
@@ -222,16 +243,46 @@ document.addEventListener("DOMContentLoaded", function() {
         return true;
     }
 
-    function columnChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player) {
-        let step = player === "white" ? 1 : -1;
+    function pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player) {
+        const step = player === "white" ? 1 : -1;
 
         for (let i = previousSquareRow + step; player === "white" ? i <= movedSquareRow : i >= movedSquareRow; i += step) {
             const targetSquare = document.querySelector(`[data-row="${i}"][data-column="${previousSquareColumn}"]`);
-            console.log(targetSquare)
             if(targetSquare && targetSquare.children.length > 0) {
                 return false;
             }
         }
+
+        return true;
+    }
+
+    function rowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, direction) {
+        for(let i = previousSquareRow + direction; direction > 0 ? i <= movedSquareRow : i >= movedSquareRow; i += direction) {
+            const targetSquare = document.querySelector(`[data-row="${i}"][data-column="${previousSquareColumn}"]`);
+            if (targetSquare && targetSquare.children.length > 0) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function columnChecker(previousSquareColumn, movedSquareColumn, previousSquareRow, direction) {
+        for(let i = previousSquareColumn + direction; direction > 0 ? i <= movedSquareColumn : i >= movedSquareColumn; i += direction) {
+            const targetSquare = document.querySelector(`[data-row="${previousSquareRow}"][data-column="${i}"]`);
+            if(i !== movedSquareColumn && i !== movedSquareRow) {
+                if (targetSquare && targetSquare.children.length > 0) {
+                    return false;
+                }
+            } else {
+                console.log(targetSquare.querySelector("img"), targetSquare)
+                if(targetSquare.querySelector("img")) {
+                    capturePiece(targetSquare.querySelector("img"))
+                    return true;
+                }
+            }
+        }
+
         return true;
     }
 
