@@ -25,10 +25,9 @@ document.addEventListener("DOMContentLoaded", function() {
         let backgroundClass;
         const row = Math.floor((i - 1) / 8);
         const col = (i - 1) % 8;
-        const filled = i <= 16 || i > 48 ? true : false;
 
         backgroundClass = (row + col) % 2 === 0 ? "lightBackgound" : "darkBackground";
-        sectionBoardInnerHtml += `<div class="block ${backgroundClass}" data-column="${(col) + 1}" data-row="${(row) + 1}" data-square="${i}" data-filled="${filled}"></div>`;
+        sectionBoardInnerHtml += `<div class="block ${backgroundClass}" data-column="${(col) + 1}" data-row="${(row) + 1}" data-square="${i}"></div>`;
     }
     document.getElementById("sectionBoard").innerHTML = sectionBoardInnerHtml;
 
@@ -146,11 +145,11 @@ document.addEventListener("DOMContentLoaded", function() {
                             selectedPiece.classList.remove("selected");
                             selectedPiece = null;
                             moves++;
-                        }
 
-                        document.querySelectorAll("[data-square]").forEach(square => {
-                            square.removeEventListener("click", squareClick);
-                        });
+                            document.querySelectorAll("[data-square]").forEach(square => {
+                                square.removeEventListener("click", squareClick);
+                            });
+                        }
                     } catch(error) {
                         return;
                     }
@@ -161,6 +160,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function pawnMoveChecker(selectedPiece, movedSquare, player) {
         let playerPawn = player === "white" ? 1 : -1;
+        const diagonalCheck = player === "white" ? 1 : -1;
         const previousSquare = selectedPiece.closest(".block");
         const previousSquareRow = parseInt(previousSquare.dataset.row);
         const previousSquareColumn = parseInt(previousSquare.dataset.column);
@@ -169,7 +169,6 @@ document.addEventListener("DOMContentLoaded", function() {
         const checkLeftDiagonal = document.querySelector(`[data-row="${previousSquareRow + playerPawn}"][data-column="${previousSquareColumn + 1}"]`);
         const checkRightDiagonal = document.querySelector(`[data-row="${previousSquareRow + playerPawn}"][data-column="${previousSquareColumn - 1}"]`);
 
-        console.log(selectedPiece.closest(".block"))
         if ((player === "white" && previousSquareRow === 2) || (player === "black" && previousSquareRow === 7)) {
             playerPawn = player === "white" ? 2 : -2;
             if (selectedPiece.dataset.color === "white" && 
@@ -190,12 +189,12 @@ document.addEventListener("DOMContentLoaded", function() {
         }
 
         if (selectedPiece.dataset.color === player) {
-            if (movedSquare === checkLeftDiagonal && checkLeftDiagonal && checkLeftDiagonal.firstChild && checkLeftDiagonal.firstChild.dataset.color !== player) {
+            if (movedSquare === checkLeftDiagonal && checkLeftDiagonal && checkLeftDiagonal.children.length > 0 && checkLeftDiagonal.querySelector("img").dataset.color !== player) {
                 capturePiece(checkLeftDiagonal);
                 return true;
             }
         
-            if (movedSquare === checkRightDiagonal && checkRightDiagonal && checkRightDiagonal.firstChild && checkRightDiagonal.firstChild.dataset.color !== player) {
+            if (movedSquare === checkRightDiagonal && checkRightDiagonal && checkRightDiagonal.children.length > 0 && checkRightDiagonal.dataset.color !== player) {
                 capturePiece(checkRightDiagonal);
                 return true;
             }
@@ -226,10 +225,10 @@ document.addEventListener("DOMContentLoaded", function() {
     function columnChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player) {
         let step = player === "white" ? 1 : -1;
 
-        console.log(previousSquareRow, movedSquareRow, previousSquareColumn, player)
         for (let i = previousSquareRow + step; player === "white" ? i <= movedSquareRow : i >= movedSquareRow; i += step) {
             const targetSquare = document.querySelector(`[data-row="${i}"][data-column="${previousSquareColumn}"]`);
-            if(targetSquare && targetSquare.firstChild) {
+            console.log(targetSquare)
+            if(targetSquare && targetSquare.children.length > 0) {
                 return false;
             }
         }
@@ -239,7 +238,7 @@ document.addEventListener("DOMContentLoaded", function() {
     function capturePiece(takenPiece) {
         checkExposeKing();
         const parentElement = takenPiece.closest(".block");
-        const takenPieceImg = takenPiece.firstChild;
+        const takenPieceImg = takenPiece.querySelector("img");
 
         parentElement.removeChild(takenPieceImg);
     }
