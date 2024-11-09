@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     document.querySelectorAll(`[data-piece]`).forEach(element => {
         element.addEventListener("click", function pieceClick(event) {
-            if (selectedPiece !== null) {
+            if(selectedPiece !== null) {
                 selectedPiece.classList.remove("selected");
             }
 
@@ -124,7 +124,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                 isMoveCorrect = pawnMoveChecker(selectedPiece, square, player);
                                 break;
                             case "rook":
-                                isMoveCorrect = rookMoveChecker(selectedPiece, square, player);
+                                isMoveCorrect = rookMoveChecker(selectedPiece, square);
                                 break;
                             case "knight":
                                 isMoveCorrect = knightMoveChecker(selectedPiece, square);
@@ -133,10 +133,10 @@ document.addEventListener("DOMContentLoaded", function() {
                                 isMoveCorrect = bishopMoveChecker(selectedPiece, square);
                                 break;
                             case "queen":
-                                isMoveCorrect = queenMoveChecker(selectedPiece, square, player);
+                                isMoveCorrect = queenMoveChecker(selectedPiece, square);
                                 break;
                             case "king":
-                                isMoveCorrect = kingMoveChecker(selectedPiece, square, player);
+                                isMoveCorrect = kingMoveChecker(selectedPiece, square);
                                 break;
                         }
 
@@ -168,9 +168,9 @@ document.addEventListener("DOMContentLoaded", function() {
         const checkLeftDiagonal = document.querySelector(`[data-row="${previousSquareRow + playerPawn}"][data-column="${previousSquareColumn + 1}"]`);
         const checkRightDiagonal = document.querySelector(`[data-row="${previousSquareRow + playerPawn}"][data-column="${previousSquareColumn - 1}"]`);
 
-        if ((player === "white" && previousSquareRow === 2) || (player === "black" && previousSquareRow === 7)) {
+        if((player === "white" && previousSquareRow === 2) || (player === "black" && previousSquareRow === 7)) {
             playerPawn = player === "white" ? 2 : -2;
-            if (selectedPiece.dataset.color === "white" && 
+            if(selectedPiece.dataset.color === "white" && 
                 movedSquareRow <= previousSquareRow + playerPawn && 
                 previousSquareColumn === movedSquareColumn) {
                     return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
@@ -180,19 +180,19 @@ document.addEventListener("DOMContentLoaded", function() {
                     return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
                 }
         } else {
-            if (movedSquareRow === previousSquareRow + playerPawn && 
+            if(movedSquareRow === previousSquareRow + playerPawn && 
                 previousSquareColumn === movedSquareColumn) {
                     return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
             }
         }
 
-        if (movedSquare === checkLeftDiagonal && checkLeftDiagonal && 
+        if(movedSquare === checkLeftDiagonal && checkLeftDiagonal && 
             checkLeftDiagonal.children.length > 0 && checkLeftDiagonal.querySelector("img").dataset.color !== player) {
                 capturePiece(checkLeftDiagonal);
                 return true;
         }
     
-        if (movedSquare === checkRightDiagonal && checkRightDiagonal && 
+        if(movedSquare === checkRightDiagonal && checkRightDiagonal && 
             checkRightDiagonal.children.length > 0 && checkRightDiagonal.dataset.color !== player) {
                 capturePiece(checkRightDiagonal);
                 return true;
@@ -202,24 +202,14 @@ document.addEventListener("DOMContentLoaded", function() {
         return false;
     }
 
-    function rookMoveChecker(selectedPiece, movedSquare, player) {
+    function rookMoveChecker(selectedPiece, movedSquare) {
         const previousSquare = selectedPiece.closest(".block");
         const previousSquareRow = parseInt(previousSquare.dataset.row);
         const previousSquareColumn = parseInt(previousSquare.dataset.column);
         const movedSquareRow = parseInt(movedSquare.dataset.row);
         const movedSquareColumn = parseInt(movedSquare.dataset.column);
 
-        if((previousSquareColumn === movedSquareColumn) || (previousSquareRow === movedSquareRow)) {
-            let direction;
-            if(previousSquareColumn === movedSquareColumn) {
-                direction = previousSquareRow < movedSquareRow ? 1 : -1;
-                return rowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, direction, player);
-            } else if(previousSquareRow === movedSquareRow) {
-                direction = previousSquareColumn < movedSquareColumn ? 1 : -1;
-                return columnChecker(previousSquareColumn, movedSquareColumn, previousSquareRow, direction, player);
-            }
-        }
-
+        if(lineMoveChecker(previousSquareRow, previousSquareColumn, movedSquareRow, movedSquareColumn)) return true;
         return false;
     }
 
@@ -233,7 +223,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const rowDifference = Math.abs(movedSquareRow - previousSquareRow);
         const columnDifference = Math.abs(movedSquareColumn - previousSquareColumn);
 
-        if ((rowDifference === 2 && columnDifference === 1) || (rowDifference === 1 && columnDifference === 2)) {
+        if((rowDifference === 2 && columnDifference === 1) || (rowDifference === 1 && columnDifference === 2)) {
             if(movedSquare.querySelector("img")) {
                 capturePiece(movedSquare);
             }
@@ -252,23 +242,42 @@ document.addEventListener("DOMContentLoaded", function() {
 
         let directionHorizontal = previousSquareColumn < movedSquareColumn ? 1 : -1;
         let directionVertical = previousSquareRow < movedSquareRow ? 1 : -1;
-        console.log(directionHorizontal, directionVertical)
 
         return diagonalChecker(previousSquareRow, previousSquareColumn, directionHorizontal, directionVertical, movedSquareRow, movedSquareColumn);
     }
 
-    function queenMoveChecker(selectedPiece, movedSquare, player) {
-        return true;
+    function queenMoveChecker(selectedPiece, movedSquare) {
+        const previousSquare = selectedPiece.closest(".block");
+        const previousSquareRow = parseInt(previousSquare.dataset.row);
+        const previousSquareColumn = parseInt(previousSquare.dataset.column);
+        const movedSquareRow = parseInt(movedSquare.dataset.row);
+        const movedSquareColumn = parseInt(movedSquare.dataset.column);
+    
+        if(lineMoveChecker(previousSquareRow, previousSquareColumn, movedSquareRow, movedSquareColumn)) return true;
+
+        let directionHorizontal = previousSquareColumn < movedSquareColumn ? 1 : -1;
+        let directionVertical = previousSquareRow < movedSquareRow ? 1 : -1;
+        return diagonalChecker(previousSquareRow, previousSquareColumn, directionHorizontal, directionVertical, movedSquareRow, movedSquareColumn);
     }
 
-    function kingMoveChecker(selectedPiece, movedSquare, player) {
-        return true;
+    function kingMoveChecker(selectedPiece, movedSquare) {
+        const previousSquare = selectedPiece.closest(".block");
+        const previousSquareRow = parseInt(previousSquare.dataset.row);
+        const previousSquareColumn = parseInt(previousSquare.dataset.column);
+        const movedSquareRow = parseInt(movedSquare.dataset.row);
+        const movedSquareColumn = parseInt(movedSquare.dataset.column);
+    
+        if(lineMoveChecker(previousSquareRow, previousSquareColumn, movedSquareRow, movedSquareColumn)) return true;
+
+        let directionHorizontal = previousSquareColumn < movedSquareColumn ? 1 : -1;
+        let directionVertical = previousSquareRow < movedSquareRow ? 1 : -1;
+        return diagonalChecker(previousSquareRow, previousSquareColumn, directionHorizontal, directionVertical, movedSquareRow, movedSquareColumn);
     }
 
     function pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player) {
         const step = player === "white" ? 1 : -1;
 
-        for (let i = previousSquareRow + step; player === "white" ? i <= movedSquareRow : i >= movedSquareRow; i += step) {
+        for(let i = previousSquareRow + step; player === "white" ? i <= movedSquareRow : i >= movedSquareRow; i += step) {
             const targetSquare = document.querySelector(`[data-row="${i}"][data-column="${previousSquareColumn}"]`);
             if(targetSquare && targetSquare.children.length > 0) {
                 return false;
@@ -278,11 +287,22 @@ document.addEventListener("DOMContentLoaded", function() {
         return true;
     }
 
+    function lineMoveChecker(previousRow, previousColumn, movedRow, movedColumn) {
+        if(previousRow === movedRow) {
+            let direction = previousColumn < movedColumn ? 1 : -1;
+            return columnChecker(previousColumn, movedColumn, previousRow, direction);
+        } else if(previousColumn === movedColumn) {
+            let direction = previousRow < movedRow ? 1 : -1;
+            return rowChecker(previousRow, movedRow, previousColumn, direction);
+        }
+        return false;
+    }
+
     function rowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, direction) {
         for(let i = previousSquareRow + direction; direction > 0 ? i <= movedSquareRow : i >= movedSquareRow; i += direction) {
             const targetSquare = document.querySelector(`[data-row="${i}"][data-column="${previousSquareColumn}"]`);
             if(i !== movedSquareRow) {
-                if (targetSquare && targetSquare.children.length > 0) {
+                if(targetSquare && targetSquare.children.length > 0) {
                     return false;
                 }
             } else {
@@ -300,7 +320,7 @@ document.addEventListener("DOMContentLoaded", function() {
         for(let i = previousSquareColumn + direction; direction > 0 ? i <= movedSquareColumn : i >= movedSquareColumn; i += direction) {
             const targetSquare = document.querySelector(`[data-row="${previousSquareRow}"][data-column="${i}"]`);
             if(i !== movedSquareColumn) {
-                if (targetSquare && targetSquare.children.length > 0) {
+                if(targetSquare && targetSquare.children.length > 0) {
                     return false;
                 }
             } else {
@@ -315,18 +335,18 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     function diagonalChecker(previousSquareRow, previousSquareColumn, directionHorizontal, directionVertical, movedSquareRow, movedSquareColumn) {
-        if (Math.abs(previousSquareRow - movedSquareRow) !== Math.abs(previousSquareColumn - movedSquareColumn)) return false;
+        if(Math.abs(previousSquareRow - movedSquareRow) !== Math.abs(previousSquareColumn - movedSquareColumn)) return false;
         
-        for (let i = previousSquareRow + directionVertical, j = previousSquareColumn + directionHorizontal; 
+        for(let i = previousSquareRow + directionVertical, j = previousSquareColumn + directionHorizontal; 
              (directionVertical > 0 ? i <= movedSquareRow : i >= movedSquareRow) && (directionHorizontal > 0 ? j <= movedSquareColumn : j >= movedSquareColumn);
              i += directionVertical, j += directionHorizontal) {
             const targetSquare = document.querySelector(`[data-row="${i}"][data-column="${j}"]`);    
-            if (i !== movedSquareRow) {
-                if (targetSquare && targetSquare.children.length > 0) {
+            if(i !== movedSquareRow) {
+                if(targetSquare && targetSquare.children.length > 0) {
                     return false;
                 }
             } else {
-                if (targetSquare && targetSquare.querySelector("img")) {
+                if(targetSquare && targetSquare.querySelector("img")) {
                     capturePiece(targetSquare);
                     return true;
                 }
