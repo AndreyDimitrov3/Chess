@@ -127,7 +127,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                 isMoveCorrect = rookMoveChecker(selectedPiece, square, player);
                                 break;
                             case "knight":
-                                isMoveCorrect = knightMoveChecker(selectedPiece, square, player);
+                                isMoveCorrect = knightMoveChecker(selectedPiece, square);
                                 break;
                             case "bishop":
                                 isMoveCorrect = bishopMoveChecker(selectedPiece, square, player);
@@ -180,26 +180,24 @@ document.addEventListener("DOMContentLoaded", function() {
                     return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
                 }
         } else {
-            if (selectedPiece.dataset.color === player && 
-                movedSquareRow === previousSquareRow + playerPawn && 
+            if (movedSquareRow === previousSquareRow + playerPawn && 
                 previousSquareColumn === movedSquareColumn) {
                     return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
             }
         }
 
-        if (selectedPiece.dataset.color === player) {
-            if (movedSquare === checkLeftDiagonal && checkLeftDiagonal && 
-                checkLeftDiagonal.children.length > 0 && checkLeftDiagonal.querySelector("img").dataset.color !== player) {
-                    capturePiece(checkLeftDiagonal);
-                    return true;
-            }
-        
-            if (movedSquare === checkRightDiagonal && checkRightDiagonal && 
-                checkRightDiagonal.children.length > 0 && checkRightDiagonal.dataset.color !== player) {
-                    capturePiece(checkRightDiagonal);
-                    return true;
-            }
+        if (movedSquare === checkLeftDiagonal && checkLeftDiagonal && 
+            checkLeftDiagonal.children.length > 0 && checkLeftDiagonal.querySelector("img").dataset.color !== player) {
+                capturePiece(checkLeftDiagonal);
+                return true;
         }
+    
+        if (movedSquare === checkRightDiagonal && checkRightDiagonal && 
+            checkRightDiagonal.children.length > 0 && checkRightDiagonal.dataset.color !== player) {
+                capturePiece(checkRightDiagonal);
+                return true;
+        }
+        
 
         return false;
     }
@@ -211,24 +209,38 @@ document.addEventListener("DOMContentLoaded", function() {
         const movedSquareRow = parseInt(movedSquare.dataset.row);
         const movedSquareColumn = parseInt(movedSquare.dataset.column);
 
-        if(selectedPiece.dataset.color === player) {
-            if((previousSquareColumn === movedSquareColumn) || (previousSquareRow === movedSquareRow)) {
-                let direction;
-                if(previousSquareColumn === movedSquareColumn) {
-                    direction = previousSquareRow < movedSquareRow ? 1 : -1;
-                    return rowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, direction, player);
-                } else if(previousSquareRow === movedSquareRow) {
-                    direction = previousSquareColumn < movedSquareColumn ? 1 : -1;
-                    return columnChecker(previousSquareColumn, movedSquareColumn, previousSquareRow, direction, player);
-                }
+        if((previousSquareColumn === movedSquareColumn) || (previousSquareRow === movedSquareRow)) {
+            let direction;
+            if(previousSquareColumn === movedSquareColumn) {
+                direction = previousSquareRow < movedSquareRow ? 1 : -1;
+                return rowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, direction, player);
+            } else if(previousSquareRow === movedSquareRow) {
+                direction = previousSquareColumn < movedSquareColumn ? 1 : -1;
+                return columnChecker(previousSquareColumn, movedSquareColumn, previousSquareRow, direction, player);
             }
         }
 
         return false;
     }
 
-    function knightMoveChecker(selectedPiece, movedSquare, player) {
-        return true;
+    function knightMoveChecker(selectedPiece, movedSquare) {
+        const previousSquare = selectedPiece.closest(".block");
+        const previousSquareRow = parseInt(previousSquare.dataset.row);
+        const previousSquareColumn = parseInt(previousSquare.dataset.column);
+        const movedSquareRow = parseInt(movedSquare.dataset.row);
+        const movedSquareColumn = parseInt(movedSquare.dataset.column);
+    
+        const rowDifference = Math.abs(movedSquareRow - previousSquareRow);
+        const columnDifference = Math.abs(movedSquareColumn - previousSquareColumn);
+
+        if ((rowDifference === 2 && columnDifference === 1) || (rowDifference === 1 && columnDifference === 2)) {
+            if(movedSquare.querySelector("img")) {
+                capturePiece(movedSquare);
+            }
+            return true;
+        }
+    
+        return false;
     }
 
     function bishopMoveChecker(selectedPiece, movedSquare, player) {
@@ -288,7 +300,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             }
         }
-        
+
         return true;
     }
 
