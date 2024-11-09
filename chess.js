@@ -266,12 +266,18 @@ document.addEventListener("DOMContentLoaded", function() {
         const previousSquareColumn = parseInt(previousSquare.dataset.column);
         const movedSquareRow = parseInt(movedSquare.dataset.row);
         const movedSquareColumn = parseInt(movedSquare.dataset.column);
+        
+        const rowDifference = Math.abs(movedSquareRow - previousSquareRow);
+        const columnDifference = Math.abs(movedSquareColumn - previousSquareColumn);
     
-        if(lineMoveChecker(previousSquareRow, previousSquareColumn, movedSquareRow, movedSquareColumn)) return true;
-
-        let directionHorizontal = previousSquareColumn < movedSquareColumn ? 1 : -1;
-        let directionVertical = previousSquareRow < movedSquareRow ? 1 : -1;
-        return diagonalChecker(previousSquareRow, previousSquareColumn, directionHorizontal, directionVertical, movedSquareRow, movedSquareColumn);
+        if (rowDifference <= 1 && columnDifference <= 1) {
+            if (movedSquare.querySelector("img")) {
+                capturePiece(movedSquare);
+            }
+            return true;
+        }
+        
+        return false;
     }
 
     function pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player) {
