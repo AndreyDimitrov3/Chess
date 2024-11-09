@@ -217,7 +217,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 if(previousSquareColumn === movedSquareColumn) {
                     direction = previousSquareRow < movedSquareRow ? 1 : -1;
                     return rowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, direction, player);
-                } else {
+                } else if(previousSquareRow === movedSquareRow) {
                     direction = previousSquareColumn < movedSquareColumn ? 1 : -1;
                     return columnChecker(previousSquareColumn, movedSquareColumn, previousSquareRow, direction, player);
                 }
@@ -259,8 +259,15 @@ document.addEventListener("DOMContentLoaded", function() {
     function rowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, direction) {
         for(let i = previousSquareRow + direction; direction > 0 ? i <= movedSquareRow : i >= movedSquareRow; i += direction) {
             const targetSquare = document.querySelector(`[data-row="${i}"][data-column="${previousSquareColumn}"]`);
-            if (targetSquare && targetSquare.children.length > 0) {
-                return false;
+            if(i !== movedSquareRow) {
+                if (targetSquare && targetSquare.children.length > 0) {
+                    return false;
+                }
+            } else {
+                if(targetSquare && targetSquare.querySelector("img")) {
+                    capturePiece(targetSquare)
+                    return true;
+                }
             }
         }
 
@@ -270,19 +277,18 @@ document.addEventListener("DOMContentLoaded", function() {
     function columnChecker(previousSquareColumn, movedSquareColumn, previousSquareRow, direction) {
         for(let i = previousSquareColumn + direction; direction > 0 ? i <= movedSquareColumn : i >= movedSquareColumn; i += direction) {
             const targetSquare = document.querySelector(`[data-row="${previousSquareRow}"][data-column="${i}"]`);
-            if(i !== movedSquareColumn && i !== movedSquareRow) {
+            if(i !== movedSquareColumn) {
                 if (targetSquare && targetSquare.children.length > 0) {
                     return false;
                 }
             } else {
-                console.log(targetSquare.querySelector("img"), targetSquare)
-                if(targetSquare.querySelector("img")) {
-                    capturePiece(targetSquare.querySelector("img"))
+                if(targetSquare && targetSquare.querySelector("img")) {
+                    capturePiece(targetSquare);
                     return true;
                 }
             }
         }
-
+        
         return true;
     }
 
