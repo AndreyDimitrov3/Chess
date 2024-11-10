@@ -101,62 +101,77 @@ document.addEventListener("DOMContentLoaded", function() {
 
     document.querySelectorAll(`[data-piece]`).forEach(element => {
         element.addEventListener("click", function pieceClick(event) {
-            if(selectedPiece !== null) {
+            if (selectedPiece !== null) {
                 selectedPiece.classList.remove("selected");
             }
-
+    
             let player = moves % 2 === 0 ? "white" : "black";
-            if(event.target.dataset.color !== player) {
+            
+            if (event.target.dataset.color !== player) {
                 return;
             }
-
+    
             selectedPiece = event.target;
             selectedPiece.classList.add("selected");
-
             event.stopPropagation();
-
+    
             document.querySelectorAll("[data-square]").forEach(square => {
-                square.addEventListener("click", function squareClick() {
-                    let isMoveCorrect = false;
-                    try {
-                        switch(selectedPiece.dataset.piece) {
-                            case "pawn":
-                                isMoveCorrect = pawnMoveChecker(selectedPiece, square, player);
-                                break;
-                            case "rook":
-                                isMoveCorrect = rookMoveChecker(selectedPiece, square);
-                                break;
-                            case "knight":
-                                isMoveCorrect = knightMoveChecker(selectedPiece, square);
-                                break;
-                            case "bishop":
-                                isMoveCorrect = bishopMoveChecker(selectedPiece, square);
-                                break;
-                            case "queen":
-                                isMoveCorrect = queenMoveChecker(selectedPiece, square);
-                                break;
-                            case "king":
-                                isMoveCorrect = kingMoveChecker(selectedPiece, square);
-                                break;
-                        }
-
-                        if(isMoveCorrect) {
-                            square.appendChild(selectedPiece);
-                            selectedPiece.classList.remove("selected");
-                            selectedPiece = null;
-                            moves++;
-
-                            document.querySelectorAll("[data-square]").forEach(square => {
-                                square.removeEventListener("click", squareClick);
-                            });
-                        }
-                    } catch(error) {
-                        return;
-                    }
-                });
+                square.removeEventListener("click", squareClick);
+            });
+    
+            document.querySelectorAll("[data-square]").forEach(square => {
+                square.addEventListener("click", squareClick);
             });
         });
     });
+    
+    function squareClick(event) {
+        const square = event.currentTarget;
+        let isMoveCorrect = false;
+        let player = moves % 2 === 0 ? "white" : "black";
+    
+        try {
+            switch (selectedPiece.dataset.piece) {
+                case "pawn":
+                    isMoveCorrect = pawnMoveChecker(selectedPiece, square, player);
+                    break;
+                case "rook":
+                    isMoveCorrect = rookMoveChecker(selectedPiece, square);
+                    break;
+                case "knight":
+                    isMoveCorrect = knightMoveChecker(selectedPiece, square);
+                    break;
+                case "bishop":
+                    isMoveCorrect = bishopMoveChecker(selectedPiece, square);
+                    break;
+                case "queen":
+                    isMoveCorrect = queenMoveChecker(selectedPiece, square);
+                    break;
+                case "king":
+                    isMoveCorrect = kingMoveChecker(selectedPiece, square);
+                    break;
+            }
+    
+            if (isMoveCorrect) {
+                square.appendChild(selectedPiece);
+                selectedPiece.classList.remove("selected");
+                moves++;
+    
+                if (isKingInCheck(player)) {
+                    new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3").play();
+                } else {
+                    new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3").play();
+                }
+    
+                selectedPiece = null;
+                document.querySelectorAll("[data-square]").forEach(square => {
+                    square.removeEventListener("click", squareClick);
+                });
+            }
+        } catch (error) {
+            console.error("Error in squareClick: ", error);
+        }
+    }
 
     function pawnMoveChecker(selectedPiece, movedSquare, player) {
         let playerPawn = player === "white" ? 1 : -1;
