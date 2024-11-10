@@ -1,25 +1,8 @@
 document.addEventListener("DOMContentLoaded", function() {
     // Declare Variables
-    let validation;
-    let gameOver;
     let sectionBoardInnerHtml = "";
-    let lastBackgroundRow = "darkBackground";
     let selectedPiece = null;
     let moves = 0;
-    const pawnStartingPosition = ["a", "b", "c", "d", "e", "f", "g", "h"];
-
-    function resetValidation() {
-        validation = [];
-        for(let i = 0; i < 64; i++) {
-            if(i % 8 === 0) {
-                validation.push([i + 1]);
-            } else {
-                validation[validation.length - 1].push(i + 1);
-            }
-        }
-        gameOver = false;
-    }
-    resetValidation();
 
     for(let i = 64; i >= 1; i--) {
         let backgroundClass;
@@ -39,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const whiteQueen = document.querySelector(`[data-square="5"]`);
 
         for(let i = 9; i <= 16; i++) {
-            document.querySelector(`[data-square="${i}"]`).innerHTML = `<img src="assets/whitePawn.svg" alt="Pawn" data-piece="pawn" data-color="white" data-startingPosition="${pawnStartingPosition[i - 9]}2">`;
+            document.querySelector(`[data-square="${i}"]`).innerHTML = `<img src="assets/whitePawn.svg" alt="Pawn" data-piece="pawn" data-color="white">`;
         }
 
         whiteRook.forEach(rook => {
@@ -72,7 +55,7 @@ document.addEventListener("DOMContentLoaded", function() {
         const blackKing = document.querySelector(`[data-square="60"]`);
 
         for(let i = 49; i <= 56; i++) {
-            document.querySelector(`[data-square="${i}"]`).innerHTML = `<img src="assets/blackPawn.svg" alt="Pawn" data-piece="pawn" data-color="black" data-startingposition="${pawnStartingPosition[i - 49]}7">`;
+            document.querySelector(`[data-square="${i}"]`).innerHTML = `<img src="assets/blackPawn.svg" alt="Pawn" data-piece="pawn" data-color="black"">`;
         }
 
         blackRook.forEach(rook => {
@@ -172,6 +155,7 @@ document.addEventListener("DOMContentLoaded", function() {
             console.error("Error in squareClick: ", error);
         }
     }
+    
 
     function pawnMoveChecker(selectedPiece, movedSquare, player) {
         let playerPawn = player === "white" ? 1 : -1;
@@ -181,8 +165,8 @@ document.addEventListener("DOMContentLoaded", function() {
         const movedSquareRow = parseInt(movedSquare.dataset.row);
         const movedSquareColumn = parseInt(movedSquare.dataset.column);
         const checkLeftDiagonal = document.querySelector(`[data-row="${previousSquareRow + playerPawn}"][data-column="${previousSquareColumn + 1}"]`);
-        const checkRightDiagonal = document.querySelector(`[data-row="${previousSquareRow + playerPawn}"][data-column="${previousSquareColumn - 1}"]`);
-
+        const checkRightDiagonal = document.querySelector(`[data-row="${previousSquareRow + playerPawn}"][data-column="${previousSquareColumn - 1}"]`);   
+        
         if((player === "white" && previousSquareRow === 2) || (player === "black" && previousSquareRow === 7)) {
             playerPawn = player === "white" ? 2 : -2;
             if(selectedPiece.dataset.color === "white" && 
@@ -197,7 +181,7 @@ document.addEventListener("DOMContentLoaded", function() {
         } else {
             if(movedSquareRow === previousSquareRow + playerPawn && 
                 previousSquareColumn === movedSquareColumn) {
-                    return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
+                return pawnRowChecker(previousSquareRow, movedSquareRow, previousSquareColumn, player);
             }
         }
 
@@ -212,7 +196,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 capturePiece(checkRightDiagonal);
                 return true;
         }
-        
 
         return false;
     }
@@ -285,8 +268,8 @@ document.addEventListener("DOMContentLoaded", function() {
         const rowDifference = Math.abs(movedSquareRow - previousSquareRow);
         const columnDifference = Math.abs(movedSquareColumn - previousSquareColumn);
     
-        if (rowDifference <= 1 && columnDifference <= 1) {
-            if (movedSquare.querySelector("img")) {
+        if(rowDifference <= 1 && columnDifference <= 1) {
+            if(movedSquare.querySelector("img")) {
                 capturePiece(movedSquare);
             }
             return true;
@@ -304,7 +287,6 @@ document.addEventListener("DOMContentLoaded", function() {
                 return false;
             }
         }
-
         return true;
     }
 
@@ -377,11 +359,140 @@ document.addEventListener("DOMContentLoaded", function() {
         return true;
     }
 
+    function isKingInCheck(player) {
+        const king = document.querySelector(`[data-piece="king"][data-color="${player}"]`);
+        const oppositePlayer = player === "white" ? "black" : "white";
+        let isInCheck = false;
+    
+        for(const opponentPiece of document.querySelectorAll(`[data-color="${oppositePlayer}"]`)) {
+            const pieceType = opponentPiece.dataset.piece;
+            const piecePosition = opponentPiece.closest(".block");
+
+            if(isPieceCheckingKing(pieceType, opponentPiece, piecePosition, king)) {
+                isInCheck = true;
+                break;
+            }
+        }
+
+        if(isInCheck) alert(`${player} Check!`);
+        return isInCheck;
+    }
+    
+    function isPieceCheckingKing(pieceType, opponentPiece, piecePosition, king) {
+        switch (pieceType) {
+            case "pawn":
+                return pawnCanAttack(opponentPiece, piecePosition, king);
+            case "rook":
+                return rookCanAttack(opponentPiece, piecePosition, king);
+            case "knight":
+                return knightCanAttack(opponentPiece, piecePosition, king);
+            case "bishop":
+                return bishopCanAttack(opponentPiece, piecePosition, king);
+            case "queen":
+                return queenCanAttack(opponentPiece, piecePosition, king);
+            case "king":
+                return kingCanAttack(opponentPiece, piecePosition, king);
+        }
+    }
+
+    function pawnCanAttack(opponentPiece, piecePosition, king) {
+        const opponentPawnRow = parseInt(piecePosition.dataset.row);
+        const opponentPawnCol = parseInt(piecePosition.dataset.column);
+        const kingRow = parseInt(king.closest(".block").dataset.row);
+        const kingCol = parseInt(king.closest(".block").dataset.column);
+
+        const attackDirection = opponentPiece.dataset.color === "black" ? -1 : 1;
+
+        const isAttackingDiagonally = 
+            (opponentPawnRow + attackDirection === kingRow) &&
+            Math.abs(opponentPawnCol - kingCol) === 1 &&
+            opponentPiece.dataset.color !== king.dataset.color;
+    
+        return isAttackingDiagonally;
+    }
+    
+    
+    function rookCanAttack(opponentPiece, piecePosition, king) {
+        const opponentRookRow = parseInt(piecePosition.dataset.row);
+        const opponentRookCol = parseInt(piecePosition.dataset.column);
+        const kingRow = parseInt(king.closest(".block").dataset.row);
+        const kingCol = parseInt(king.closest(".block").dataset.column);
+    
+        if(opponentPiece.dataset.color !== king.dataset.color && 
+            (opponentRookRow === kingRow || opponentRookCol === kingCol)) {
+            
+            if(opponentRookRow === kingRow) {
+                return !isPathBlocked(opponentRookRow, opponentRookCol, kingRow, kingCol, "horizontal");
+            }
+            if(opponentRookCol === kingCol) {
+                return !isPathBlocked(opponentRookRow, opponentRookCol, kingRow, kingCol, "vertical");
+            }
+        }
+        return false;
+    }
+    
+    function isPathBlocked(startRow, startCol, endRow, endCol, direction) {
+        const stepRow = direction === "horizontal" ? 0 : startRow < endRow ? 1 : -1;
+        const stepCol = direction === "vertical" ? 0 : startCol < endCol ? 1 : -1;
+        let row = startRow + stepRow;
+        let col = startCol + stepCol;
+    
+        while (row !== endRow || col !== endCol) {
+            const targetSquare = document.querySelector(`[data-row="${row}"][data-column="${col}"]`);
+            if(targetSquare && targetSquare.children.length > 0) return true;
+            row += stepRow;
+            col += stepCol;
+        }
+        return false;
+    }
+    
+    function knightCanAttack(opponentPiece, piecePosition, king) {
+        const opponentKnightRow = parseInt(piecePosition.dataset.row);
+        const opponentKnightCol = parseInt(piecePosition.dataset.column);
+        const kingRow = parseInt(king.closest(".block").dataset.row);
+        const kingCol = parseInt(king.closest(".block").dataset.column);
+        const rowDiff = Math.abs(opponentKnightRow - kingRow);
+        const colDiff = Math.abs(opponentKnightCol - kingCol);
+    
+        return opponentPiece.dataset.color !== king.dataset.color && 
+               ((rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2));
+    }
+    
+    function bishopCanAttack(opponentPiece, piecePosition, king) {
+        const opponentBishopRow = parseInt(piecePosition.dataset.row);
+        const opponentBishopCol = parseInt(piecePosition.dataset.column);
+        const kingRow = parseInt(king.closest(".block").dataset.row);
+        const kingCol = parseInt(king.closest(".block").dataset.column);
+    
+        if(opponentPiece.dataset.color !== king.dataset.color && 
+            Math.abs(opponentBishopRow - kingRow) === Math.abs(opponentBishopCol - kingCol)) {            
+            const pathBlocked = isPathBlocked(opponentBishopRow, opponentBishopCol, kingRow, kingCol, "diagonal");
+            return !pathBlocked;
+        }
+    
+        return false;
+    }
+    
+    
+    function queenCanAttack(opponentPiece, piecePosition, king) {
+        return rookCanAttack(opponentPiece, piecePosition, king) || bishopCanAttack(opponentPiece, piecePosition, king);
+    }
+    
+    function kingCanAttack(opponentPiece, piecePosition, king) {
+        const opponentKingRow = parseInt(piecePosition.dataset.row);
+        const opponentKingCol = parseInt(piecePosition.dataset.column);
+        const kingRow = parseInt(king.closest(".block").dataset.row);
+        const kingCol = parseInt(king.closest(".block").dataset.column);
+    
+        return opponentPiece.dataset.color !== king.dataset.color && 
+               Math.abs(opponentKingRow - kingRow) <= 1 && Math.abs(opponentKingCol - kingCol) <= 1;
+    }
+
     function capturePiece(takenPiece) {
         checkExposeKing();
         const parentElement = takenPiece.closest(".block");
         const takenPieceImg = takenPiece.querySelector("img");
-
+        new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3').play();
         parentElement.removeChild(takenPieceImg);
     }
 
