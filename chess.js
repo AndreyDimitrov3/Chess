@@ -473,7 +473,6 @@ document.addEventListener("DOMContentLoaded", function() {
         return false;
     }
     
-    
     function queenCanAttack(opponentPiece, piecePosition, king) {
         return rookCanAttack(opponentPiece, piecePosition, king) || bishopCanAttack(opponentPiece, piecePosition, king);
     }
