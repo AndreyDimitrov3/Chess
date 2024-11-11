@@ -20,9 +20,12 @@ body {
 .block {
     width: 80px;
     height: 80px;
-    padding: 2px;
     border: 0;
     background-color: rgb(240,240,240);
+}
+
+.block img {
+    border: 2px solid transparent;
 }
 
 .lightBackgound {
@@ -35,10 +38,4 @@ body {
 
 .selected {
     background-color: rgba(180, 200, 210, 0.8);
-    margin: -2px;
-    padding: 2px;
-}
-
-.piece {
-    height: 80%;
 }
