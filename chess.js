@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     let sectionBoardInnerHtml = "";
     let selectedPiece = null;
     let moves = 0;
+    let isCapture = false;
 
     for(let i = 64; i >= 1; i--) {
         let backgroundClass;
@@ -114,6 +115,7 @@ document.addEventListener("DOMContentLoaded", function() {
         let player = moves % 2 === 0 ? "white" : "black";
     
         try {
+            isCapture = false;
             switch (selectedPiece.dataset.piece) {
                 case "pawn":
                     isMoveCorrect = pawnMoveChecker(selectedPiece, square, player);
@@ -135,14 +137,20 @@ document.addEventListener("DOMContentLoaded", function() {
                     break;
             }
     
-            if (isMoveCorrect) {
+            if(isMoveCorrect) {
                 square.appendChild(selectedPiece);
                 selectedPiece.classList.remove("selected");
                 selectedPiece = null;
                 moves++;
 
-                isKingInCheck(player) ? new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3").play() : new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3").play();
-    
+                if(isKingInCheck(player)) {
+                    new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3").play();
+                } else if(isCapture) {
+                    new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3').play();
+                } else {
+                    new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3").play();
+                }
+        
                 document.querySelectorAll("[data-square]").forEach(square => {
                     square.removeEventListener("click", squareClick);
                 });
@@ -183,12 +191,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if(movedSquare === checkLeftDiagonal && checkLeftDiagonal && 
             checkLeftDiagonal.children.length > 0 && checkLeftDiagonal.querySelector("img").dataset.color !== player) {
+                isCapture = true;
                 capturePiece(checkLeftDiagonal);
                 return true;
         }
     
         if(movedSquare === checkRightDiagonal && checkRightDiagonal && 
             checkRightDiagonal.children.length > 0 && checkRightDiagonal.dataset.color !== player) {
+                isCapture = true;
                 capturePiece(checkRightDiagonal);
                 return true;
         }
@@ -219,6 +229,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         if((rowDifference === 2 && columnDifference === 1) || (rowDifference === 1 && columnDifference === 2)) {
             if(movedSquare.querySelector("img")) {
+                isCapture = true;
                 capturePiece(movedSquare);
             }
             return true;
@@ -266,6 +277,7 @@ document.addEventListener("DOMContentLoaded", function() {
     
         if(rowDifference <= 1 && columnDifference <= 1) {
             if(movedSquare.querySelector("img")) {
+                isCapture = true;
                 capturePiece(movedSquare);
             }
             return true;
@@ -306,6 +318,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             } else {
                 if(targetSquare && targetSquare.querySelector("img")) {
+                    isCapture = true;
                     capturePiece(targetSquare)
                     return true;
                 }
@@ -324,6 +337,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             } else {
                 if(targetSquare && targetSquare.querySelector("img")) {
+                    isCapture = true;
                     capturePiece(targetSquare);
                     return true;
                 }
@@ -346,6 +360,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             } else {
                 if(targetSquare && targetSquare.querySelector("img")) {
+                    isCapture = true;
                     capturePiece(targetSquare);
                     return true;
                 }
@@ -370,9 +385,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        if(isInCheck) {
-            alert(`${oppositePlayer} is in check!`);
-        }
         return isInCheck;
     }
     
@@ -487,12 +499,10 @@ document.addEventListener("DOMContentLoaded", function() {
 
     function capturePiece(takenPiece) {
         checkExposeKing();
-        new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3').play();
         const parentElement = takenPiece.closest(".block");
         const takenPieceImg = takenPiece.querySelector("img");
         parentElement.removeChild(takenPieceImg);
     }
-
     function checkExposeKing() {
         return true;
     }
