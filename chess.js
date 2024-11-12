@@ -147,25 +147,23 @@ document.addEventListener("DOMContentLoaded", function() {
             }
     
             if (isMoveCorrect) {
-                if (isMoveCorrect) {
-                    if (square.childElementCount > 0) {
-                        isCapture = true;
-                        capturePiece(square.querySelector("img"));
-                    }
-                    square.appendChild(selectedPiece);
-                    selectedPiece.classList.remove("selected");
-                    selectedPiece = null;
-                    moves++;
-        
-                    previousMoveWasCheck = isKingInCheck(player);
-        
-                    if (previousMoveWasCheck) {
-                        new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3").play();
-                    } else if (isCapture) {
-                        new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3').play();
-                    } else {
-                        new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3").play();
-                    }
+                if (square.childElementCount > 0) {
+                    isCapture = true;
+                    capturePiece(square.querySelector("img"));
+                }
+                square.appendChild(selectedPiece);
+                selectedPiece.classList.remove("selected");
+                selectedPiece = null;
+                moves++;
+    
+                previousMoveWasCheck = isKingInCheck(player);
+    
+                if (previousMoveWasCheck) {
+                    new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3").play();
+                } else if (isCapture) {
+                    new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3').play();
+                } else {
+                    new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3").play();
                 }
             }
         } catch (error) {
@@ -202,18 +200,13 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
 
-        if(movedSquare === checkLeftDiagonal && checkLeftDiagonal && 
-            checkLeftDiagonal.children.length > 0 && checkLeftDiagonal.querySelector("img").dataset.color !== player) {
+        if ((movedSquare === checkLeftDiagonal || movedSquare === checkRightDiagonal) && movedSquare.children.length > 0) {
+            const targetPiece = movedSquare.querySelector("img");
+            if (targetPiece && targetPiece.dataset.color !== player) {
                 isCapture = true;
-                capturePiece(checkLeftDiagonal);
+                capturePiece(movedSquare);
                 return true;
-        }
-    
-        if(movedSquare === checkRightDiagonal && checkRightDiagonal && 
-            checkRightDiagonal.children.length > 0 && checkRightDiagonal.dataset.color !== player) {
-                isCapture = true;
-                capturePiece(checkRightDiagonal);
-                return true;
+            }
         }
 
         return false;
@@ -527,11 +520,12 @@ document.addEventListener("DOMContentLoaded", function() {
         return false;
     }
 
-    function capturePiece(takenPiece) {
-        checkExposeKing();
-        const parentElement = takenPiece.closest(".block");
-        const takenPieceImg = takenPiece.querySelector("img");
-        parentElement.removeChild(takenPieceImg);
+    function capturePiece(takenSquare) {
+        const takenPiece = takenSquare.querySelector("img");
+        if (takenPiece) {
+            checkExposeKing();
+            takenSquare.removeChild(takenPiece);
+        }
     }
 
     function checkExposeKing() {
