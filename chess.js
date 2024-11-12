@@ -4,6 +4,8 @@ document.addEventListener("DOMContentLoaded", function() {
     let selectedPiece = null;
     let moves = 0;
     let isCapture = false;
+    let previousMoveWasCheck = false;
+    let checkingPiece = null;    
 
     for(let i = 64; i >= 1; i--) {
         let backgroundClass;
@@ -116,6 +118,13 @@ document.addEventListener("DOMContentLoaded", function() {
     
         try {
             isCapture = false;
+    
+            if (previousMoveWasCheck) {
+                if (!isKingMove(selectedPiece, square) && !canCaptureAttackingPiece(square)) {
+                    return;
+                }
+            }
+    
             switch (selectedPiece.dataset.piece) {
                 case "pawn":
                     isMoveCorrect = pawnMoveChecker(selectedPiece, square, player);
@@ -137,23 +146,27 @@ document.addEventListener("DOMContentLoaded", function() {
                     break;
             }
     
-            if(isMoveCorrect) {
-                square.appendChild(selectedPiece);
-                selectedPiece.classList.remove("selected");
-                selectedPiece = null;
-                moves++;
-
-                if(isKingInCheck(player)) {
-                    new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3").play();
-                } else if(isCapture) {
-                    new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3').play();
-                } else {
-                    new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3").play();
-                }
+            if (isMoveCorrect) {
+                if (isMoveCorrect) {
+                    if (square.childElementCount > 0) {
+                        isCapture = true;
+                        capturePiece(square.querySelector("img"));
+                    }
+                    square.appendChild(selectedPiece);
+                    selectedPiece.classList.remove("selected");
+                    selectedPiece = null;
+                    moves++;
         
-                document.querySelectorAll("[data-square]").forEach(square => {
-                    square.removeEventListener("click", squareClick);
-                });
+                    previousMoveWasCheck = isKingInCheck(player);
+        
+                    if (previousMoveWasCheck) {
+                        new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-check.mp3").play();
+                    } else if (isCapture) {
+                        new Audio('https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3').play();
+                    } else {
+                        new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3").play();
+                    }
+                }
             }
         } catch (error) {
             console.error("Error in squareClick: ", error);
@@ -413,12 +426,14 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const attackDirection = opponentPiece.dataset.color === "black" ? -1 : 1;
 
-        const isAttackingDiagonally = 
-            (opponentPawnRow + attackDirection === kingRow) &&
+        if((opponentPawnRow + attackDirection === kingRow) &&
             Math.abs(opponentPawnCol - kingCol) === 1 &&
-            opponentPiece.dataset.color !== king.dataset.color;
-    
-        return isAttackingDiagonally;
+            opponentPiece.dataset.color !== king.dataset.color) {
+            checkingPiece = piecePosition.querySelector("img")
+            return true;
+        }
+
+        return false;
     }
     
     
@@ -432,7 +447,7 @@ document.addEventListener("DOMContentLoaded", function() {
             (opponentRookRow === kingRow || opponentRookCol === kingCol)) {
             
             if(opponentRookRow === kingRow) {
-                return !isPathBlocked(opponentRookRow, opponentRookCol, kingRow, kingCol, "horizontal");
+                return !isPathBlocked(opponentRookRow, opponentRookCol, kingRow, kingCol, "horizontal", piecePosition.querySelector("img"));
             }
             if(opponentRookCol === kingCol) {
                 return !isPathBlocked(opponentRookRow, opponentRookCol, kingRow, kingCol, "vertical");
@@ -441,7 +456,7 @@ document.addEventListener("DOMContentLoaded", function() {
         return false;
     }
     
-    function isPathBlocked(startRow, startCol, endRow, endCol, direction) {
+    function isPathBlocked(startRow, startCol, endRow, endCol, direction, piecePosition) {
         const stepRow = direction === "horizontal" ? 0 : startRow < endRow ? 1 : -1;
         const stepCol = direction === "vertical" ? 0 : startCol < endCol ? 1 : -1;
         let row = startRow + stepRow;
@@ -449,7 +464,10 @@ document.addEventListener("DOMContentLoaded", function() {
     
         while (row !== endRow || col !== endCol) {
             const targetSquare = document.querySelector(`[data-row="${row}"][data-column="${col}"]`);
-            if(targetSquare && targetSquare.children.length > 0) return true;
+            if(targetSquare && targetSquare.children.length > 0) {
+                checkingPiece = piecePosition;
+                return true;
+            }
             row += stepRow;
             col += stepCol;
         }
@@ -463,9 +481,13 @@ document.addEventListener("DOMContentLoaded", function() {
         const kingCol = parseInt(king.closest(".block").dataset.column);
         const rowDiff = Math.abs(opponentKnightRow - kingRow);
         const colDiff = Math.abs(opponentKnightCol - kingCol);
+
+        if(opponentPiece.dataset.color !== king.dataset.color && ((rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2))) {
+            checkingPiece = piecePosition.querySelector("img");
+            return true;
+        }
     
-        return opponentPiece.dataset.color !== king.dataset.color && 
-               ((rowDiff === 2 && colDiff === 1) || (rowDiff === 1 && colDiff === 2));
+        return false;
     }
     
     function bishopCanAttack(opponentPiece, piecePosition, king) {
@@ -475,15 +497,21 @@ document.addEventListener("DOMContentLoaded", function() {
         const kingCol = parseInt(king.closest(".block").dataset.column);
     
         if(opponentPiece.dataset.color !== king.dataset.color && 
-            Math.abs(opponentBishopRow - kingRow) === Math.abs(opponentBishopCol - kingCol)) {            
+            Math.abs(opponentBishopRow - kingRow) === Math.abs(opponentBishopCol - kingCol)) {         
             const pathBlocked = isPathBlocked(opponentBishopRow, opponentBishopCol, kingRow, kingCol, "diagonal");
+            checkingPiece = piecePosition.querySelector("img");
             return !pathBlocked;
         }
+    
         return false;
     }
     
     function queenCanAttack(opponentPiece, piecePosition, king) {
-        return rookCanAttack(opponentPiece, piecePosition, king) || bishopCanAttack(opponentPiece, piecePosition, king);
+        if(rookCanAttack(opponentPiece, piecePosition, king) || bishopCanAttack(opponentPiece, piecePosition, king)) {
+            checkingPiece = piecePosition.querySelector("img");
+            return true;
+        }
+        return false;
     }
     
     function kingCanAttack(opponentPiece, piecePosition, king) {
@@ -491,9 +519,12 @@ document.addEventListener("DOMContentLoaded", function() {
         const opponentKingCol = parseInt(piecePosition.dataset.column);
         const kingRow = parseInt(king.closest(".block").dataset.row);
         const kingCol = parseInt(king.closest(".block").dataset.column);
-    
-        return opponentPiece.dataset.color !== king.dataset.color && 
-               Math.abs(opponentKingRow - kingRow) <= 1 && Math.abs(opponentKingCol - kingCol) <= 1;
+
+        if(opponentPiece.dataset.color !== king.dataset.color && Math.abs(opponentKingRow - kingRow) <= 1 && Math.abs(opponentKingCol - kingCol) <= 1) {
+            checkingPiece = piecePosition.querySelector("img");
+            return true;
+        }
+        return false;
     }
 
     function capturePiece(takenPiece) {
@@ -502,7 +533,41 @@ document.addEventListener("DOMContentLoaded", function() {
         const takenPieceImg = takenPiece.querySelector("img");
         parentElement.removeChild(takenPieceImg);
     }
+
     function checkExposeKing() {
         return true;
+    }
+
+    function isKingMove(selectedPiece, movedSquare) {
+        if (selectedPiece.dataset.piece === "king") {
+            const isKingInNewPositionSafe = !isSquareAttacked(movedSquare, selectedPiece.dataset.color);
+            return isKingInNewPositionSafe;
+        }
+        return false;
+    }
+
+    function canCaptureAttackingPiece(movedSquare) {
+        if (checkingPiece && movedSquare.contains(checkingPiece)) {
+            isCapture = true;
+            movedSquare.removeChild(checkingPiece);
+            checkingPiece = null;
+            return true;
+        }
+
+        return false;
+    }
+
+    function isSquareAttacked(square, playerColor) {
+        const opponentColor = playerColor === "white" ? "black" : "white";
+    
+        for (const opponentPiece of document.querySelectorAll(`[data-color="${opponentColor}"]`)) {
+            const pieceType = opponentPiece.dataset.piece;
+            const piecePosition = opponentPiece.closest(".block");
+    
+            if (isPieceCheckingKing(pieceType, opponentPiece, piecePosition, square)) {
+                return true;
+            }
+        }
+        return false;
     }
 })
