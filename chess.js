@@ -479,7 +479,6 @@ document.addEventListener("DOMContentLoaded", function() {
             const pathBlocked = isPathBlocked(opponentBishopRow, opponentBishopCol, kingRow, kingCol, "diagonal");
             return !pathBlocked;
         }
-    
         return false;
     }
     
