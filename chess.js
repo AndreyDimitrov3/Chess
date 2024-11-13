@@ -147,10 +147,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
     
             if (isMoveCorrect) {
-                if (square.childElementCount > 0) {
-                    isCapture = true;
-                    capturePiece(square.querySelector("img"));
-                }
                 square.appendChild(selectedPiece);
                 selectedPiece.classList.remove("selected");
                 selectedPiece = null;
