@@ -175,7 +175,6 @@ document.addEventListener("DOMContentLoaded", function() {
         const movedSquareRow = parseInt(movedSquare.dataset.row);
         const movedSquareColumn = parseInt(movedSquare.dataset.column);
     
-        // Special initial two-square move for pawns
         if ((player === "white" && previousSquareRow === 2) || (player === "black" && previousSquareRow === 7)) {
             playerPawn = player === "white" ? 2 : -2;
             if (selectedPiece.dataset.color === "white" &&
@@ -193,7 +192,6 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     
-        // Check for diagonal capture using the helper function
         return pawnDiagonalCapture(selectedPiece, movedSquare, previousSquare, player);
     }
 
@@ -201,21 +199,19 @@ document.addEventListener("DOMContentLoaded", function() {
         const previousSquareRow = parseInt(previousSquare.dataset.row);
         const previousSquareColumn = parseInt(previousSquare.dataset.column);
     
-        const playerPawn = player === "white" ? 1 : -1; // Direction the pawn moves
+        const playerPawn = player === "white" ? 1 : -1;
         const checkLeftDiagonal = document.querySelector(`[data-row="${previousSquareRow + playerPawn}"][data-column="${previousSquareColumn - 1}"]`);
         const checkRightDiagonal = document.querySelector(`[data-row="${previousSquareRow + playerPawn}"][data-column="${previousSquareColumn + 1}"]`);
     
-        // Check if the move is diagonal and the square contains an enemy piece
         if ((movedSquare === checkLeftDiagonal || movedSquare === checkRightDiagonal) && movedSquare.children.length > 0) {
             const targetPiece = movedSquare.querySelector("img");
             if (targetPiece && targetPiece.dataset.color !== player) {
-                // Capture the enemy piece
                 capturePiece(movedSquare);
-                return true;  // Captured piece
+                return true;
             }
         }
     
-        return false; // No capture
+        return false;
     }
 
     function rookMoveChecker(selectedPiece, movedSquare) {
@@ -494,16 +490,43 @@ document.addEventListener("DOMContentLoaded", function() {
         const opponentBishopCol = parseInt(piecePosition.dataset.column);
         const kingRow = parseInt(king.closest(".block").dataset.row);
         const kingCol = parseInt(king.closest(".block").dataset.column);
-
-        if(opponentPiece.dataset.color !== king.dataset.color && 
+    
+        if (kingRow === opponentBishopRow && kingCol === opponentBishopCol) {
+            return false;
+        }
+    
+        if (opponentPiece.dataset.color !== king.dataset.color && 
             Math.abs(opponentBishopRow - kingRow) === Math.abs(opponentBishopCol - kingCol)) {         
-            const pathBlocked = isPathBlocked(opponentBishopRow, opponentBishopCol, kingRow, kingCol, "diagonal");
+            
+            const pathBlocked = isDiagonalPathBlocked(opponentBishopRow, opponentBishopCol, kingRow, kingCol, piecePosition);
             checkingPiece = piecePosition.querySelector("img");
+            
             return !pathBlocked;
         }
-
+    
         return false;
     }
+    
+    function isDiagonalPathBlocked(startRow, startCol, endRow, endCol, piecePosition) {
+        const directionVertical = startRow < endRow ? 1 : -1;
+        const directionHorizontal = startCol < endCol ? 1 : -1;
+    
+        let row = startRow + directionVertical;
+        let col = startCol + directionHorizontal;
+    
+        while (row !== endRow && col !== endCol) {
+            const targetSquare = document.querySelector(`[data-row="${row}"][data-column="${col}"]`);
+            if (targetSquare && targetSquare.children.length > 0) {
+                checkingPiece = piecePosition;
+                return true;
+            }
+            row += directionVertical;
+            col += directionHorizontal;
+        }
+    
+        return false;
+    }
+    
 
     function queenCanAttack(opponentPiece, piecePosition, king) {
         if(rookCanAttack(opponentPiece, piecePosition, king) || bishopCanAttack(opponentPiece, piecePosition, king)) {
