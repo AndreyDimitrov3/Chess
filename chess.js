@@ -142,7 +142,7 @@ document.addEventListener("DOMContentLoaded", function() {
                     isMoveCorrect = queenMoveChecker(selectedPiece, square);
                     break;
                 case "king":
-                    isMoveCorrect = kingMoveChecker(selectedPiece, square);
+                    isMoveCorrect = kingMoveChecker(selectedPiece, square, player);
                     break;
             }
 
@@ -192,10 +192,10 @@ document.addEventListener("DOMContentLoaded", function() {
             }
         }
     
-        return pawnDiagonalCapture(selectedPiece, movedSquare, previousSquare, player);
+        return pawnDiagonalCapture(movedSquare, previousSquare, player);
     }
 
-    function pawnDiagonalCapture(selectedPiece, movedSquare, previousSquare, player) {
+    function pawnDiagonalCapture(movedSquare, previousSquare, player) {
         const previousSquareRow = parseInt(previousSquare.dataset.row);
         const previousSquareColumn = parseInt(previousSquare.dataset.column);
     
@@ -207,6 +207,7 @@ document.addEventListener("DOMContentLoaded", function() {
             const targetPiece = movedSquare.querySelector("img");
             if (targetPiece && targetPiece.dataset.color !== player) {
                 capturePiece(movedSquare);
+                isCapture = true;
                 return true;
             }
         }
@@ -273,7 +274,7 @@ document.addEventListener("DOMContentLoaded", function() {
         return diagonalChecker(previousSquareRow, previousSquareColumn, directionHorizontal, directionVertical, movedSquareRow, movedSquareColumn);
     }
 
-    function kingMoveChecker(selectedPiece, movedSquare) {
+    function kingMoveChecker(selectedPiece, movedSquare, player) {
         const previousSquare = selectedPiece.closest(".block");
         const previousSquareRow = parseInt(previousSquare.dataset.row);
         const previousSquareColumn = parseInt(previousSquare.dataset.column);
@@ -282,6 +283,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const rowDifference = Math.abs(movedSquareRow - previousSquareRow);
         const columnDifference = Math.abs(movedSquareColumn - previousSquareColumn);
+
+        if(isSquareAttacked(movedSquare, player)) return false;
 
         if(rowDifference <= 1 && columnDifference <= 1) {
             if(movedSquare.querySelector("img")) {
@@ -552,22 +555,25 @@ document.addEventListener("DOMContentLoaded", function() {
     function capturePiece(takenSquare) {
         const takenPiece = takenSquare.querySelector("img");
         if (takenPiece) {
-            checkExposeKing();
             takenSquare.removeChild(takenPiece);
         }
     }
 
-    function checkExposeKing() {
-        return true;
-    }
-
     function isKingMove(selectedPiece, movedSquare) {
         if (selectedPiece.dataset.piece === "king") {
-            const isKingInNewPositionSafe = !isSquareAttacked(movedSquare, selectedPiece.dataset.color);
-            return isKingInNewPositionSafe;
+            const originalSquare = selectedPiece.closest(".block");
+            movedSquare.appendChild(selectedPiece);
+    
+            // Check if the king is still safe in the new position
+            const isSafe = !isSquareAttacked(movedSquare, selectedPiece.dataset.color);
+    
+            // Revert the move if unsafe
+            originalSquare.appendChild(selectedPiece);
+            return isSafe;
         }
         return false;
     }
+    
 
     function canCaptureAttackingPiece(movedSquare) {
         if (!checkingPiece || !movedSquare.contains(checkingPiece)) {
@@ -620,7 +626,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 return true;
             } else {
                 isCapture = true;
-                capturePiece(checkingPiece);
+                capturePiece(movedSquare);
                 checkingPiece = null;
                 return true;
             }
