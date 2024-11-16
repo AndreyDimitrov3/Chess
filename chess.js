@@ -451,6 +451,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 return !isPathBlocked(opponentRookRow, opponentRookCol, kingRow, kingCol, "vertical");
             }
         }
+
         return false;
     }
 
